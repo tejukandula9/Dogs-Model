@@ -12,9 +12,6 @@ import dash_bootstrap_components as dbc
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 server = app.server
 
-fig = visualize_tree(['Sex_Male', 'Fixed_Status_Fixed', 'Pitbull_Status_Pit Bull', 'Condition_Status_Normal', 'Senior_Status_Senior'])
-plt.savefig('decision_tree.png',dpi=300, bbox_inches = "tight")
-
 def get_factors_list(factors):
     if 'Breed_Type_' in factors:
         new_cols = get_col_names('Breed_Type_')
@@ -36,10 +33,14 @@ app.layout = html.Div(children=[
         ),
     html.H1(children='Adoption/Euthanization Model'),
     html.Div(children=[
+        html.Div(children=[
         html.Img(id='example'),
+        html.Div(id='accuracy')
+        ]),
         html.Br(),
         html.Br(),
         html.Br(),
+        html.Div(children=[
         dcc.Checklist(
             id = 'factors',
             labelStyle={'display': 'block'},
@@ -54,7 +55,15 @@ app.layout = html.Div(children=[
             ],
             value=['Sex_Male', 'Fixed_Status_Fixed', 'Condition_Status_Normal', 'Senior_Status_Senior', 
             'Age upon Outcome (months)', 'Breed_Type_', 'Color_']
-        )
+        ),
+        html.Label('Tree Depth'),
+        dcc.Slider(
+            id = 'depth',
+            min = 1,
+            max = 4,
+            value = 2,
+            marks={i: str(i) for i in range(1, 5)},
+        )])
     ], style={'display': 'flex', 'flex-direction': 'row'}),
     dcc.Graph(id='importance')
 ])
@@ -62,19 +71,31 @@ app.layout = html.Div(children=[
 # Output Tree Diagram
 @app.callback(
     dash.dependencies.Output('example', 'src'),
-    dash.dependencies.Input('factors', 'value')
+    dash.dependencies.Output('importance', 'figure'),
+    dash.dependencies.Output('accuracy', 'children'),
+    dash.dependencies.Input('factors', 'value'),
+    dash.dependencies.Input('depth', 'value')
 )
-def update_figure(factors):
+def update_figure(factors, depth):
+    # Output Tree Diagram
     buf = io.BytesIO() # in-memory files
     if len(factors) <= 0:
         fig = plt.figure(figsize=(3,2))
     else:
         factors = get_factors_list(factors)
-        visualize_tree(factors)
+        model_info = create_model(factors, depth)
+        dtree = model_info[0]
+        cols = model_info[1]
+        accuracy = 'Model Accuracy: ' + str(model_info[2])
+        visualize_tree(dtree, cols)
     plt.savefig(buf, format = "png",dpi=300, bbox_inches = "tight") # save to the above file object
     plt.close()
     data = base64.b64encode(buf.getbuffer()).decode("utf8") # encode to html elements
-    return "data:image/png;base64,{}".format(data)
+
+    # Importance bar chart
+    importance = find_importance(dtree, cols)
+    imp_graph = px.bar(importance, x = 'Factor', y = 'Importance Level')
+    return "data:image/png;base64,{}".format(data), imp_graph, accuracy
 
 @app.callback(
     dash.dependencies.Output("alert-auto", "is_open"),
@@ -86,16 +107,6 @@ def toggle_alert(factors, is_open):
     if len(factors) <= 0:
         return not is_open
     return is_open
-
-#Output Importance Barplot
-@app.callback(
-    dash.dependencies.Output('importance', 'figure'),
-    dash.dependencies.Input('factors', 'value')
-)
-def update_figure(factors):
-    factors = get_factors_list(factors)
-    importance = find_importance(factors)
-    return px.bar(importance, x = 'Factor', y = 'Importance Level')
 
 if __name__ == '__main__':
     app.run_server()
