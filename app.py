@@ -10,7 +10,7 @@ import base64
 import dash_bootstrap_components as dbc
 
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
-server = app.server()
+server = app.server
 
 fig = visualize_tree(['Sex_Male', 'Fixed_Status_Fixed', 'Pitbull_Status_Pit Bull', 'Condition_Status_Normal', 'Senior_Status_Senior'])
 plt.savefig('decision_tree.png',dpi=300, bbox_inches = "tight")
