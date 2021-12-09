@@ -3,6 +3,7 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeClassifier,DecisionTreeRegressor, plot_tree
 from sklearn import tree
+from sklearn import metrics
 from matplotlib import pyplot as plt
 import plotly.express as px
 
@@ -91,31 +92,29 @@ def create_dogs_df():
     dogs = pd.concat([dogs, pd.get_dummies(dogs['Color'], prefix='Color')], axis=1)
     return dogs
 
-def create_model(x_vals):
+def create_model(x_vals, depth=2):
     dogs = create_dogs_df()
     x = dogs[x_vals]
     y = dogs['Adoption Status']
     x_train, x_test, y_train, y_test = train_test_split(x,y,test_size = 0.30)
 
-    dtree =  DecisionTreeClassifier(max_depth=2)
+    dtree =  DecisionTreeClassifier(max_depth=depth)
     dtree.fit(x_train,y_train)
-    return (dtree, x.columns)
 
-def visualize_tree(x_vals):
-    mdl_vals = create_model(x_vals)
-    model = mdl_vals[0]
-    cols = mdl_vals[1]
+    y_pred = dtree.predict(x_test)
+    accuracy = metrics.accuracy_score(y_test, y_pred)
+    return (dtree, x.columns, accuracy)
+
+def visualize_tree(model, cols):
     fig = plt.figure(figsize=(3,1))
     tree.plot_tree(model, feature_names = cols, class_names = ['Adopted', 'Euthanised'], filled = True, proportion = True, rounded = True)
 
-def find_importance(x_vals):
-    model_info = create_model(x_vals)
-    model = model_info[0]
-    col_names = model_info[1]
+def find_importance(model, col_names):
     importance = pd.Series(model.feature_importances_, index = col_names).sort_values(ascending=False).to_frame()
     importance.reset_index(inplace=True)
     importance.columns = ['Factor', 'Importance Level']
     return importance
+
     
 def get_col_names(substr):
     cols = list(create_dogs_df().columns)
