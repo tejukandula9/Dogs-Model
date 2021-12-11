@@ -35,7 +35,7 @@ app.layout = html.Div(children=[
         "Updating Model: This May Take a Few Seconds",
         id = 'alert-update',
         is_open=False,
-        duration=2000,
+        duration=4000,
         color='success'
     ),
     html.H1(children='Adoption/Euthanization Model'),
