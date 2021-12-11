@@ -106,7 +106,10 @@ def create_model(x_vals, depth=2):
     return (dtree, x.columns, accuracy)
 
 def visualize_tree(model, cols):
-    fig = plt.figure(figsize=(3,1))
+    if model.max_depth <= 2:
+        fig = plt.figure(figsize=(3,1))
+    else:
+        fig = plt.figure(figsize =(4,2))
     tree.plot_tree(model, feature_names = cols, class_names = ['Adopted', 'Euthanised'], filled = True, proportion = True, rounded = True)
 
 def find_importance(model, col_names):
