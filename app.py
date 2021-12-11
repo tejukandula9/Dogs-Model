@@ -31,6 +31,13 @@ app.layout = html.Div(children=[
             duration=4000,
             color="danger"
         ),
+    dbc.Alert(
+        "Updating Model: This May Take a Few Seconds",
+        id = 'alert-update',
+        is_open=False,
+        duration=2000,
+        color='success'
+    ),
     html.H1(children='Adoption/Euthanization Model'),
     html.Div(children=[
         html.Div(children=[
@@ -60,7 +67,7 @@ app.layout = html.Div(children=[
         dcc.Slider(
             id = 'depth',
             min = 1,
-            max = 4,
+            max = 3,
             value = 2,
             marks={i: str(i) for i in range(1, 5)},
         )])
@@ -79,15 +86,12 @@ app.layout = html.Div(children=[
 def update_figure(factors, depth):
     # Output Tree Diagram
     buf = io.BytesIO() # in-memory files
-    if len(factors) <= 0:
-        fig = plt.figure(figsize=(3,2))
-    else:
-        factors = get_factors_list(factors)
-        model_info = create_model(factors, depth)
-        dtree = model_info[0]
-        cols = model_info[1]
-        accuracy = 'Model Accuracy: ' + str(model_info[2])
-        visualize_tree(dtree, cols)
+    factors = get_factors_list(factors)
+    model_info = create_model(factors, depth)
+    dtree = model_info[0]
+    cols = model_info[1]
+    accuracy = 'Model Accuracy: ' + str(model_info[2])
+    visualize_tree(dtree, cols)
     plt.savefig(buf, format = "png",dpi=300, bbox_inches = "tight") # save to the above file object
     plt.close()
     data = base64.b64encode(buf.getbuffer()).decode("utf8") # encode to html elements
@@ -95,6 +99,7 @@ def update_figure(factors, depth):
     # Importance bar chart
     importance = find_importance(dtree, cols)
     imp_graph = px.bar(importance, x = 'Factor', y = 'Importance Level')
+    imp_graph.update_layout(title_text='Feature Importance of Decision Tree', title_x=0.5)
     return "data:image/png;base64,{}".format(data), imp_graph, accuracy
 
 @app.callback(
@@ -107,6 +112,16 @@ def toggle_alert(factors, is_open):
     if len(factors) <= 0:
         return not is_open
     return is_open
+
+@app.callback(
+    dash.dependencies.Output("alert-update", "is_open"),
+    dash.dependencies.Input('factors', 'value'),
+    dash.dependencies.Input('depth', 'value'),
+    [dash.dependencies.State("alert-update", "is_open")]
+)
+# Toggle alert to show model is updating and may take a few seconds
+def toggle_alert_update(factors, depth, is_open):
+    return not is_open
 
 if __name__ == '__main__':
     app.run_server()
