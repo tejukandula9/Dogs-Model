@@ -121,7 +121,9 @@ def toggle_alert(factors, is_open):
 )
 # Toggle alert to show model is updating and may take a few seconds
 def toggle_alert_update(factors, depth, is_open):
-    return not is_open
+    if len(factors) > 0:
+        return not is_open
+    return is_open
 
 if __name__ == '__main__':
     app.run_server()
