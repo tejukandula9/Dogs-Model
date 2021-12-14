@@ -35,7 +35,7 @@ app.layout = html.Div(children=[
         "Updating Model: This May Take a Few Seconds",
         id = 'alert-update',
         is_open=False,
-        duration=4000,
+        duration=2000,
         color='success'
     ),
     html.H1(children='Adoption/Euthanization Model'),
@@ -64,15 +64,21 @@ app.layout = html.Div(children=[
             'Age upon Outcome (months)', 'Breed_Type_', 'Color_']
         ),
         html.Label('Tree Depth'),
-        dcc.Slider(
+        dcc.Dropdown(
             id = 'depth',
-            min = 1,
-            max = 3,
+            options = [
+                {'label': '1', 'value': 1},
+                {'label': '2', 'value': 2},
+                {'label': '3', 'value': 3}
+            ],
             value = 2,
-            marks={i: str(i) for i in range(1, 5)},
-        )])
+            clearable = False
+           )
+         
+        ])
     ], style={'display': 'flex', 'flex-direction': 'row'}),
-    dcc.Graph(id='importance')
+    dcc.Graph(id='importance'),
+    dcc.Graph(id='tree')
 ])
 
 # Output Tree Diagram
