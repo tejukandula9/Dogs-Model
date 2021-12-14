@@ -77,8 +77,7 @@ app.layout = html.Div(children=[
          
         ])
     ], style={'display': 'flex', 'flex-direction': 'row'}),
-    dcc.Graph(id='importance'),
-    dcc.Graph(id='tree')
+    dcc.Graph(id='importance')
 ])
 
 # Output Tree Diagram
